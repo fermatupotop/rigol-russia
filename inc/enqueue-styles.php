@@ -59,15 +59,37 @@ function rigol_enqueue_page_styles() {
 		filemtime(get_stylesheet_directory() .'/assets/css/single/single.css')
 		);
 	}
-		//стили для товаров
-		if(is_product()){
-		wp_enqueue_style(
-		'bardnwn-product',
-		get_stylesheet_directory_uri() . '/assets/css/product/product.css',
-		array('bardnwn-base'),
-		filemtime(get_stylesheet_directory() .'/assets/css/product/product.css')
-		);
-	}
+
+//стили для товаров
+if(is_product()){
+wp_enqueue_style(
+'bardnwn-product',
+get_stylesheet_directory_uri() . '/assets/css/product/product.css',
+array('bardnwn-base'),
+filemtime(get_stylesheet_directory() .'/assets/css/product/product.css')
+);
+}
+
+// стили для категорий товаров WooCommerce
+if ( is_product_category() ) {
+// Получаем текущий слаг категории
+$category = get_queried_object();
+$category_slug = $category->slug;
+
+// Путь к файлу стилей категории
+$category_css_path = get_stylesheet_directory() . '/assets/css/product-categories/' . $category_slug . '.css';
+$category_css_uri = get_stylesheet_directory_uri() . '/assets/css/product-categories/' . $category_slug . '.css';
+
+// Проверяем существование файла и подключаем его
+if ( file_exists( $category_css_path ) ) {
+wp_enqueue_style(
+'bardnwn-product-category-' . $category_slug,
+$category_css_uri,
+array('bardnwn-base'),
+filemtime( $category_css_path )
+);
+}
+}
 }
 add_action('wp_enqueue_scripts', 'rigol_enqueue_page_styles');
 
