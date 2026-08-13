@@ -70,25 +70,43 @@ filemtime(get_stylesheet_directory() .'/assets/css/product/product.css')
 );
 }
 
-// стили для категорий товаров WooCommerce
-if ( is_product_category() ) {
-// Получаем текущий слаг категории
-$category = get_queried_object();
-$category_slug = $category->slug;
+// Стили для категорий товаров WooCommerce (на страницах категорий И на страницах товаров)
+if ( is_product() || is_product_category() ) {
+    
+    $categories_to_load = [];
 
-// Путь к файлу стилей категории
-$category_css_path = get_stylesheet_directory() . '/assets/css/product-categories/' . $category_slug . '.css';
-$category_css_uri = get_stylesheet_directory_uri() . '/assets/css/product-categories/' . $category_slug . '.css';
+    // 1. Если мы на странице архива категории
+    if ( is_product_category() ) {
+        $category = get_queried_object();
+        $categories_to_load[] = $category->slug;
+    }
+    
+    // 2. Если мы на странице товара, получаем все его категории
+    if ( is_product() ) {
+        global $post;
+        $product_cats = get_the_terms( $post->ID, 'product_cat' );
+        
+        if ( ! empty( $product_cats ) && ! is_wp_error( $product_cats ) ) {
+            foreach ( $product_cats as $cat ) {
+                $categories_to_load[] = $cat->slug;
+            }
+        }
+    }
 
-// Проверяем существование файла и подключаем его
-if ( file_exists( $category_css_path ) ) {
-wp_enqueue_style(
-'bardnwn-product-category-' . $category_slug,
-$category_css_uri,
-array('bardnwn-base'),
-filemtime( $category_css_path )
-);
-}
+    // Подключаем стили для найденных категорий
+    foreach ( $categories_to_load as $category_slug ) {
+        $category_css_path = get_stylesheet_directory() . '/assets/css/product-categories/' . $category_slug . '.css';
+        $category_css_uri = get_stylesheet_directory_uri() . '/assets/css/product-categories/' . $category_slug . '.css';
+
+        if ( file_exists( $category_css_path ) ) {
+            wp_enqueue_style(
+                'bardnwn-product-cat-' . $category_slug,
+                $category_css_uri,
+                array('bardnwn-base'),
+                filemtime( $category_css_path )
+            );
+        }
+    }
 }
 }
 add_action('wp_enqueue_scripts', 'rigol_enqueue_page_styles');
